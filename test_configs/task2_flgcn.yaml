@@ -1,0 +1,27 @@
+---
+key: test_task2_flgcn
+model:
+  type: FLGCN
+  num_relations: 3
+  latent_dims:
+    - 32
+    - 32
+    - 32
+    - 32
+  edge_dropout: 0.
+  parameters: task2_flgcn_task2_12.8007.pt
+
+dataset:
+  name: task2
+
+train:
+  device: 0
+  epochs: 20
+  batch_size: 512
+  learning_rates:
+    - 1e-3
+  weight_decay: 0.0
+  lr_decay_step: 5
+  lr_decay_factor: 0.98
+  log_interval: 100
+  log_dir: log

@@ -1,0 +1,28 @@
+---
+key: task2_fgat
+model:
+  type: FGAT
+  num_relations: 3
+  latent_dims:
+    - 32
+    - 32
+    - 32
+    - 32
+  edge_dropout: 0.
+
+dataset:
+  name: task2
+
+train:
+  device: 0
+  epochs: 20
+  batch_size: 512
+  learning_rates:
+    - 1e-3
+    - 2e-3
+    - 5e-4
+  weight_decay: 0.0
+  lr_decay_step: 5
+  lr_decay_factor: 0.98
+  log_interval: 100
+  log_dir: log

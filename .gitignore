@@ -1,0 +1,9 @@
+*.pdf
+__pycache__
+*.zip
+.DS_Store
+*.log
+*.ipynb
+*.csv
+*.pkl
+gs

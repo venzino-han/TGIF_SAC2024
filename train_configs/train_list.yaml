@@ -1,0 +1,7 @@
+files:
+  - ./train_configs/task1_frgcn.yaml
+  - ./train_configs/task2_frgcn.yaml
+  - ./train_configs/task1_fgat.yaml
+  - ./train_configs/task2_fgat.yaml
+  - ./train_configs/task1_flgcn.yaml
+  - ./train_configs/task2_flgcn.yaml
