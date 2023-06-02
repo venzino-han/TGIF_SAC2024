@@ -2,9 +2,16 @@
 
 # How to run 
 
+## dataset
+- Put all original dataset into `dataset` directory
+
 ## Docker Container
 - Docker container use cgmc project directory as volume 
 - File change will be apply directly to file in docker container
+
+## Preprocessing
+1. `make up` : build docker image and start docker container
+3. `python3 src/preprocessing.py` : start data preprocessing in docker container
 
 ## Train 
 1. `make up` : build docker image and start docker container
