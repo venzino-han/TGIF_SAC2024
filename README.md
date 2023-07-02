@@ -1,4 +1,5 @@
-# AI506 term project
+# TGIF
+Graph-based fasion recommendation
 
 # How to run 
 
