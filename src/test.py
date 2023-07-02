@@ -24,56 +24,73 @@ from utils import get_args_from_yaml, get_logger
 from train import get_rank
 
 
-task2_valid_query_df = pd.read_csv('./processed_data/itemset_item_valid_query.csv')
-task2_test_query_df = pd.read_csv('./processed_data/itemset_item_test_query.csv')
+task2_valid_query_df = pd.read_csv('./processed_data_task2/itemset_item_valid_query.csv')
 task2_valid_answer_df = task2_valid_query_df.query('answer==1')
+task2_test_query_df = pd.read_csv('./processed_data_task2/itemset_item_test_query.csv')
+task2_test_answer_df = task2_test_query_df.query('answer==1')
 
 def evaluate_task2(model, valid_loader, test_loader, device):
     # Evaluate AUC, ACC
     model.eval()
     val_preds = []
-    # for batch in tqdm(valid_loader):
-    #     with th.no_grad():
-    #         preds = model(batch[0].to(device))
-    #     val_preds.extend(preds.cpu().tolist())
+    for batch in tqdm(valid_loader):
+        with th.no_grad():
+            preds = model(batch[0].to(device))
+        val_preds.extend(preds.cpu().tolist())
 
-    # itemset_item_answer_dict={k:v for k,v in zip(task2_valid_answer_df.itemset_id,task2_valid_answer_df.item_id)}
+    itemset_item_answer_dict={k:v for k,v in zip(task2_valid_answer_df.itemset_id, task2_valid_answer_df.item_id)}
 
-    # preds_df = pd.DataFrame({
-    #     'itemset_id': task2_valid_query_df.itemset_id,
-    #     'item_id': task2_valid_query_df.item_id,
-    #     'score': val_preds,
-    # })
-    # accs = []
-    # ranks = []
-    # for itemset_id, sub_df in preds_df.groupby('itemset_id'):
-    #     sub_df = sub_df.sort_values('score', ascending=False)
-    #     result = sub_df.item_id[:100]
-    #     answer_iid = itemset_item_answer_dict[itemset_id]
-    #     rank = get_rank(list(result), answer_iid)
-    #     ranks.append(rank)
-    #     if rank == 101:
-    #         accs.append(0)
-    #     else:
-    #         accs.append(1)
-    # val_result = np.mean(ranks)
-    # val_acc = np.mean(accs)
-    val_result = 0
-    val_acc = 0
+    preds_df = pd.DataFrame({
+        'itemset_id': task2_valid_query_df.itemset_id,
+        'item_id': task2_valid_query_df.item_id,
+        'score': val_preds,
+    })
+    accs = []
+    hit = []
+    for itemset_id, sub_df in preds_df.groupby('itemset_id'):
+        sub_df = sub_df.sort_values('score', ascending=False)
+        pred_iid = list(sub_df.item_id)[0]
+        answer_iid = itemset_item_answer_dict[itemset_id]
+        if pred_iid != answer_iid:
+            accs.append(0)
+            hit.append(0)
+        else:
+            accs.append(1)
+            hit.append(1)
+    val_result = np.mean(hit)
+    val_acc = np.mean(accs)
+    print('val hit@3: ', val_result)
 
+
+    ''' TEST '''
     test_preds = []
     for batch in tqdm(test_loader):
         with th.no_grad():
             preds = model(batch[0].to(device))
         test_preds.extend(preds.cpu().tolist())
 
+    itemset_item_answer_dict={k:v for k,v in zip(task2_test_answer_df.itemset_id, task2_test_answer_df.item_id)}
+
     preds_df = pd.DataFrame({
-        'itemset_id': task2_test_query_df.itemset_id - 53897,
-        'item_id': task2_test_query_df.item_id - 81591,
+        'itemset_id': task2_test_query_df.itemset_id,
+        'item_id': task2_test_query_df.item_id,
         'score': test_preds,
     })
-
-    preds_df.to_csv('itemset_item_test_query_result.csv', index=False)
+    accs = []
+    hit = []
+    for itemset_id, sub_df in preds_df.groupby('itemset_id'):
+        sub_df = sub_df.sort_values('score', ascending=False)
+        pred_iid = list(sub_df.item_id)[0]
+        answer_iid = itemset_item_answer_dict[itemset_id]
+        if pred_iid != answer_iid:
+            accs.append(0)
+            hit.append(0)
+        else:
+            accs.append(1)
+            hit.append(1)
+    test_result = np.mean(hit)
+    test_acc = np.mean(accs)
+    print('test hit@3: ', test_result)
 
     return val_result, val_acc, test_preds
 
@@ -83,36 +100,38 @@ task1_test_query_df = pd.read_csv('./processed_data/user_itemset_test_query.csv'
 def evaluate_task1(model, valid_loader, test_loader, device):
     # Evaluate AUC, ACC
     model.eval()
-    val_labels = []
-    val_preds = []
-    graphs = []
-    for batch in tqdm(valid_loader):
-        with th.no_grad():
-            preds = model(batch[0].to(device))
+    # val_labels = []
+    # val_preds = []
+    # graphs = []
+    # for batch in tqdm(valid_loader):
+    #     with th.no_grad():
+    #         preds = model(batch[0].to(device))
 
-        graphs.append(batch[0].cpu())
-        labels = batch[1].to(device)
-        val_labels.extend(labels.cpu().tolist())
-        val_preds.extend(preds.cpu().tolist())
+    #     # graphs.append(batch[0].cpu())
+    #     labels = batch[1]
+    #     val_labels.extend(labels.cpu().tolist())
+    #     val_preds.extend(preds.cpu().tolist())
 
-    val_result = roc_auc_score(val_labels, val_preds)
-    val_acc = accuracy_score(list(map(round, val_labels)), list(map(round, val_preds)))
+    # val_result = roc_auc_score(val_labels, val_preds)
+    # val_acc = accuracy_score(list(map(round, val_labels)), list(map(round, val_preds)))
+    # print('val AUC: ', val_result)
+    # print('val ACC: ', val_acc)
 
     test_preds = []
+    test_labels = []
     for batch in tqdm(test_loader):
         with th.no_grad():
             preds = model(batch[0].to(device))
         test_preds.extend(preds.cpu().tolist())
+        labels = batch[1]
+        test_labels.extend(labels.cpu().tolist())
 
-    preds_df = pd.DataFrame({
-        'user_id': task1_test_query_df.user_id,
-        'itemset_id': task1_test_query_df.itemset_id - 53897,
-        'score': test_preds,
-    })
+    test_result = roc_auc_score(test_labels, test_preds)
+    test_acc = accuracy_score(list(map(round, test_labels)), list(map(round, test_preds)))
+    print('test AUC: ', test_result)
+    print('test ACC: ', test_acc)
 
-    preds_df.to_csv('user_itemset_test_query_result.csv', index=False)
-
-    return val_result, val_acc, test_preds
+    return None, None, test_preds
 
 
 def test(args: EasyDict):
@@ -152,7 +171,7 @@ def test(args: EasyDict):
     dataloader_manager = DATALOADER_MAP.get(args.dataset)
     _, valid_loader, test_loader = dataloader_manager(
         data_path=args.dataset,
-        batch_size=2048,
+        batch_size=512,
         num_workers=config.NUM_WORKER,
     )
 

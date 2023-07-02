@@ -241,7 +241,7 @@ if __name__ == "__main__":
 
     
     ''' Generate negtaive query pairs for validation '''
-    NEGATIVE_SAMPLES_PER_ITEMSET = 1000
+    NEGATIVE_SAMPLES_PER_ITEMSET = 2
     itemset_ids = set(valid_df_ans.itemset_id)
     query_pair_iids = list()
     query_pair_isids = list()

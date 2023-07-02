@@ -3,6 +3,7 @@ import numpy as np
 import torch as th
 import torch.nn as nn
 from dgl.nn.pytorch.conv import EGATConv
+from models.edge_drop import edge_drop
 
 
 class FGAT(nn.Module):
@@ -64,6 +65,7 @@ class FGAT(nn.Module):
 
     def forward(self, graph):
         """graph : subgraph"""
+        graph = edge_drop(graph, self.edge_dropout,)
 
         graph.edata["norm"] = graph.edata["edge_mask"]
         node_x = graph.ndata["x"].float()

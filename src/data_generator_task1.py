@@ -119,6 +119,8 @@ class UserOutfitSubgraph(Dataset):
         
         # build graph 
         graph = dgl.from_scipy(sp_mat=usi_matrix, idtype=th.int32)
+        print(num_users, num_itemsets, num_items)
+        print(graph.number_of_nodes())
 
         graph.ndata['node_id'] = th.tensor(list(range(self.num_nodes)), dtype=th.int32)
         graph.ndata['ntype'] = th.tensor([0]*num_users + [1]*num_itemsets + [2]*num_items ,  dtype=th.int8)

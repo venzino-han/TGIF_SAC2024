@@ -7,6 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from dgl.nn.pytorch import RelGraphConv
+from models.edge_drop import edge_drop
 
 
 def uniform(size, tensor):
@@ -77,11 +78,11 @@ class FRGCN(nn.Module):
         self.lin1.reset_parameters()
         self.lin2.reset_parameters()
 
-    def forward(self, block):
-        block = edge_drop(block, self.edge_dropout, self.training)
+    def forward(self, graph):
+        graph = edge_drop(graph, self.edge_dropout,)
 
         concat_states = []
-        x = block.ndata["x"].type(
+        x = graph.ndata["x"].type(
             th.float32
         )  # one hot feature to emb vector : this part fix errors
 
@@ -89,17 +90,17 @@ class FRGCN(nn.Module):
             # edge mask zero denotes the edge dropped
             x = th.tanh(
                 conv(
-                    block,
+                    graph,
                     x,
-                    block.edata["etype"],
-                    norm=block.edata["edge_mask"].unsqueeze(1),
+                    graph.edata["etype"],
+                    norm=graph.edata["edge_mask"].unsqueeze(1),
                 )
             )
             concat_states.append(x)
         concat_states = th.cat(concat_states, 1)
 
-        users = block.ndata["nlabel"][:, 0] == 1
-        items = block.ndata["nlabel"][:, 1] == 1
+        users = graph.ndata["nlabel"][:, 0] == 1
+        items = graph.ndata["nlabel"][:, 1] == 1
         x = th.cat([concat_states[users], concat_states[items]], 1)
         x = F.relu(self.lin1(x))
         x = F.dropout(x, p=0.5, training=self.training)
@@ -112,18 +113,3 @@ class FRGCN(nn.Module):
 
     def __repr__(self):
         return self.__class__.__name__
-
-
-def edge_drop(graph, edge_dropout=0.2, training=True):
-    assert edge_dropout >= 0.0 and edge_dropout <= 1.0, "Invalid dropout rate."
-
-    if not training:
-        return graph
-
-    # set edge mask to zero in directional mode
-    src, _ = graph.edges()
-    to_drop = src.new_full((graph.number_of_edges(),), edge_dropout, dtype=th.float)
-    to_drop = th.bernoulli(to_drop).to(th.bool)
-    graph.edata["edge_mask"][to_drop] = 0
-
-    return graph

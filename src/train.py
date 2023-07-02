@@ -140,6 +140,8 @@ def train_epoch(model, optimizer, loader, device, logger, log_interval):
             iter_loss = 0.0
             iter_mse = 0.0
             iter_cnt = 0
+            if iter_idx == 500:
+                break
 
     return epoch_loss / len(loader.dataset)
 
@@ -173,6 +175,7 @@ def train(args: EasyDict, train_loader, test_loader, logger):
         model = FLGCN(
             in_feats=in_feats,
             latent_dim=args.latent_dims,
+            edge_dropout=args.edge_dropout,
         ).to(args.device)
 
     if args.parameters is not None:
